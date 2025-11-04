@@ -14,7 +14,8 @@ NAME_URL_DICT_UCI = {
     'magic': 'https://archive.ics.uci.edu/static/public/159/magic+gamma+telescope.zip',
     'shoppers': 'https://archive.ics.uci.edu/static/public/468/online+shoppers+purchasing+intention+dataset.zip',
     'beijing': 'https://archive.ics.uci.edu/static/public/381/beijing+pm2+5+data.zip',
-    'news': 'https://archive.ics.uci.edu/static/public/332/online+news+popularity.zip'
+    'news': 'https://archive.ics.uci.edu/static/public/332/online+news+popularity.zip',
+    'diabetes': 'https://archive.ics.uci.edu/static/public/296/diabetes+130-us+hospitals+for+years+1999-2008.zip',
 }
 
 def unzip_file(zip_filepath, dest_path):
