@@ -28,21 +28,33 @@ FACTOR = 32
 NUM_LAYERS = 2
 
 
-def compute_loss(X_num, X_cat, Recon_X_num, Recon_X_cat, mu_z, logvar_z):
+def compute_loss(X_num, X_cat, Recon_X_num, Recon_X_cat, mu_z, logvar_z, val=False):
     ce_loss_fn = nn.CrossEntropyLoss()
     mse_loss = (X_num - Recon_X_num).pow(2).mean()
     ce_loss = 0
     acc = 0
     total_num = 0
 
+    num_discarded = 0
     for idx, x_cat in enumerate(Recon_X_cat):
         if x_cat is not None:
-            ce_loss += ce_loss_fn(x_cat, X_cat[:, idx])
-            x_hat = x_cat.argmax(dim = -1)
-        acc += (x_hat == X_cat[:,idx]).float().sum()
-        total_num += x_hat.shape[0]
+            min = X_cat[:, idx].cpu().min().item()
+            max = X_cat[:, idx].cpu().max().item()
+            if min < 0 or max >= x_cat.shape[1]:
+                # print("Uh oh")
+                # print(f"Categorical feature index {idx} out of bounds. Found min: {min}, max: {max}, but expected values in [0, {x_cat.shape[1]-1}].")
+                num_discarded += 1
+            # assert min >= 0 and max < x_cat.shape[1], f"Categorical feature index {idx} out of bounds. Found min: {min}, max: {max}, but expected values in [0, {x_cat.shape[1]-1}]."
+            else:
+                ce_loss += ce_loss_fn(x_cat, X_cat[:, idx])
+                x_hat = x_cat.argmax(dim = -1)
+                acc += (x_hat == X_cat[:,idx]).float().sum()
+                total_num += x_hat.shape[0]
+
+    if val:
+        print("Discarded {} invalid validation entries.".format(num_discarded))
     
-    ce_loss /= (idx + 1)
+    ce_loss /= (idx + 1 - num_discarded)
     acc /= total_num
     # loss = mse_loss + ce_loss
 
@@ -165,8 +177,14 @@ def main(args):
         with torch.no_grad():
             Recon_X_num, Recon_X_cat, mu_z, std_z = model(X_test_num, X_test_cat)
 
-            val_mse_loss, val_ce_loss, val_kl_loss, val_acc = compute_loss(X_test_num, X_test_cat, Recon_X_num, Recon_X_cat, mu_z, std_z)
-            val_loss = val_mse_loss.item() * 0 + val_ce_loss.item()    
+            # >>> DEBUGGING
+            # print(X_test_num.shape, Recon_X_num.shape)
+            # print(len(X_test_cat), len(Recon_X_cat))
+            # print(mu_z.shape, std_z.shape)
+            # <<< DEBUGGING
+
+            val_mse_loss, val_ce_loss, val_kl_loss, val_acc = compute_loss(X_test_num, X_test_cat, Recon_X_num, Recon_X_cat, mu_z, std_z, val=True)
+            val_loss = val_mse_loss.item() * 0 + val_ce_loss.item()   
 
             scheduler.step(val_loss)
             new_lr = optimizer.param_groups[0]['lr']
