@@ -12,18 +12,24 @@ def execute_function(method, mode):
         module_name = f"tabsyn.{mode}"
     elif method == 'tabddpm':
         module_name = f"baselines.tabddpm.main_train" if mode == 'main' else f"baselines.tabddpm.main_sample"
+    elif method == 'tvae':
+        module_name = f"baselines.ctgan.main_tvae" if mode == 'main' else f"baselines.ctgan.sample_tvae"
+    elif method == 'ctgan':
+        module_name = f"baselines.ctgan.main_ctgan" if mode == 'main' else f"baselines.ctgan.sample_ctgan"
     else:
         module_name = f"baselines.{method}.{mode}"
 
-    try:
-        train_module = importlib.import_module(module_name)
-        train_function = getattr(train_module, 'main')
-    except ModuleNotFoundError:
-        print(f"Module {module_name} not found.")
-        exit(1)
-    except AttributeError:
-        print(f"Function 'main' not found in module {module_name}.")
-        exit(1)
+    train_module = importlib.import_module(module_name)
+    train_function = getattr(train_module, 'main')
+    # try:
+    #     train_module = importlib.import_module(module_name)
+    #     train_function = getattr(train_module, 'main')
+    # except ModuleNotFoundError:
+    #     print(f"Module {module_name} not found.")
+    #     exit(1)
+    # except AttributeError:
+    #     print(f"Function 'main' not found in module {module_name}.")
+    #     exit(1)
     return train_function
 
 def get_args():
