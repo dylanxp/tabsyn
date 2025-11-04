@@ -2,8 +2,11 @@ import pandas as pd
 
 import os
 import argparse
+import warnings
 
 from baselines.great.models.great import GReaT
+
+warnings.filterwarnings('ignore')
 
 def main(args):
 
