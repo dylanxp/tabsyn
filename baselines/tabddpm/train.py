@@ -79,8 +79,13 @@ class Trainer:
 
         best_loss = np.inf
         print('Steps: ', self.steps)
+
+        # >>> Debugging
+        step_loss_history = pd.DataFrame(columns=['step', 'mloss', 'gloss'])
+        # <<< Debugging
+
         while step < self.steps:
-            start_time = time.time()
+            # start_time = time.time()
             x = next(self.train_iter)[0]
             
             batch_loss_multi, batch_loss_gauss = self._run_step(x)
@@ -109,6 +114,10 @@ class Trainer:
                 curr_loss_gauss = 0.0
                 curr_loss_multi = 0.0
 
+                # >>> Debugging
+                step_loss_history.loc[len(step_loss_history)] = [step + 1, mloss, gloss]
+                # <<< Debugging                
+
                 if mloss + gloss < best_loss:
                     best_loss = mloss + gloss
                     torch.save(self.diffusion._denoise_fn.state_dict(), os.path.join(self.model_save_path, 'model.pt'))
@@ -121,6 +130,10 @@ class Trainer:
             step += 1
             # end_time = time.time()
             # print('Time: ', end_time - start_time)
+
+        # >>> Debugging
+        step_loss_history.to_csv(os.path.join(self.model_save_path, 'step_loss_history.csv'), index=False)
+        # <<< Debugging 
 
 def train(
     model_save_path,
