@@ -8,6 +8,7 @@ import torch
 
 # Synthcity
 from torch import optim
+from synthcity.plugins.core.schema import Schema
 
 # Goggle
 from baselines.goggle.data_utils import get_dataloader
@@ -119,6 +120,7 @@ class GoggleModel:
             train_loss, num_samples = 0.0, 0
             for i, data in enumerate(train_loader):
                 data = data.float()
+                
                 if self.iter_opt:
                     if i % 2 == 0:
                         self.model.train()
@@ -164,8 +166,21 @@ class GoggleModel:
                     train_loss += loss.item()
                     num_samples += data.shape[0]
 
+                # >>> DEBUGGING
+                print("batch loss:")
+                print(loss.item())
+                print("Checking for NaN or Inf in x_hat:")
+                print(torch.isnan(x_hat).sum(), torch.isinf(x_hat).sum())
+                print("Checking for NaN or Inf in mu_z:")
+                print(torch.isnan(mu_z).sum(), torch.isinf(mu_z).sum())
+                print("Checking for NaN or Inf in logvar_z:")
+                print(torch.isnan(logvar_z).sum(), torch.isinf(logvar_z).sum())
+                # <<< DEBUGGING
+        
             train_loss /= num_samples
 
+            print(f"{best_loss=}")
+            print(f"{train_loss=}")
             if train_loss <= best_loss:
                 best_loss = train_loss
 
